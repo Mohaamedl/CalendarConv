@@ -119,10 +119,21 @@ function App() {
       ].join('\r\n');
 
       events.forEach(event => {
-        const startDate = new Date(Date.UTC(event.start[0], event.start[1] - 1, event.start[2], event.start[3], event.start[4]));
+        const [year, month, day, hour, minute] = event.start;
+        
+        // Criar a data no fuso horário local
+        const startDate = new Date(year, month - 1, day, hour, minute);
         const endDate = new Date(startDate.getTime() + event.duration.hours * 60 * 60 * 1000);
 
-        const formatDate = (date) => date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+        // Função para formatar a data no formato ICS
+        const formatDate = (date) => {
+          return date.getFullYear() +
+            ('0' + (date.getMonth() + 1)).slice(-2) +
+            ('0' + date.getDate()).slice(-2) + 'T' +
+            ('0' + date.getHours()).slice(-2) +
+            ('0' + date.getMinutes()).slice(-2) +
+            ('0' + date.getSeconds()).slice(-2);
+        };
 
         icsContent += [
           '\r\nBEGIN:VEVENT',
