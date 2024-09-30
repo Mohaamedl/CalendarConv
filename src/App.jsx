@@ -56,7 +56,7 @@ function App() {
     let aulaTitles = {};
     let year, month;
 
-    // Extrair ano e mês
+    
     const dateMatch = text.match(/(\w+)\s+(\d{4})/);
     if (dateMatch) {
       const monthNamesPT = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
@@ -64,7 +64,7 @@ function App() {
       year = parseInt(dateMatch[2]);
     }
 
-    // Processa as designações das aulas
+
     lines.forEach((line) => {
       console.log(line)
       const titleMatch = line.match(/(\d{4})\s+(.+?)\s+\(\d{4}\)/);
@@ -76,7 +76,6 @@ function App() {
     });
     console.log(aulaTitles)
 
-    // Processa as linhas de eventos
     lines.forEach((line) => {
       const eventMatch = line.match(/^(\d{1,2})\s+((\d{2}:\d{2}\s+\d{4}\s*)+)/);
       if (eventMatch) {
@@ -139,8 +138,8 @@ function App() {
       const url = URL.createObjectURL(blob);
       setIcsFile(url);
     } catch (error) {
-      console.error('Erro ao criar o arquivo ICS:', error);
-      alert('Erro ao criar o arquivo ICS. Tente novamente.');
+      console.error('Error creating ICS:', error);
+      alert('Error creating ICS. Please try again.');
     }
   };
 
@@ -151,7 +150,7 @@ function App() {
           <div className="relative">
             <div className="absolute inset-0 bg-gradient-to-r from-green-400 to-yellow-500 shadow-lg transform -skew-y-6 sm:skew-y-0 sm:-rotate-6 sm:rounded-3xl"></div>
             <div className="relative bg-white shadow-lg sm:rounded-3xl px-4 py-10 sm:p-20">
-              <h1 className="text-4xl font-bold mb-8 text-center text-brown-800">Class Schedule Calendar</h1>
+              <h1 className="text-4xl font-bold mb-8 text-center text-brown-800">Schedule Calendar</h1>
               
               <div className="mb-6">
                 <label className="flex items-center justify-center w-full px-4 py-2 bg-green-600 text-white rounded-lg shadow-lg tracking-wide uppercase border border-green cursor-pointer hover:bg-green-700 transition duration-300 ease-in-out">
@@ -210,7 +209,7 @@ function App() {
       )}
       
       <footer className="text-center py-4 text-brown-600 text-sm bg-transparent">
-        <p>&copy; {new Date().getFullYear()} Class Schedule Calendar. All rights reserved.</p>
+        <p>&copy; {new Date().getFullYear()}Schedule Calendar. All rights reserved.</p>
         <p className="mt-2">
           Developed by Mohamed | 
           <a 
