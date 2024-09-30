@@ -209,7 +209,7 @@ function App() {
       )}
       
       <footer className="text-center py-4 text-brown-600 text-sm bg-transparent">
-        <p>&copy; {new Date().getFullYear()}Schedule Calendar. All rights reserved.</p>
+        <p>&copy; {new Date().getFullYear()} Schedule Calendar. All rights reserved.</p>
         <p className="mt-2">
           Developed by Mohamed | 
           <a 
