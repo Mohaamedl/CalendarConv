@@ -1,6 +1,5 @@
-import { createEvent } from 'ics';
 import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf';
-import React, { useState, useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import { FaCalendarAlt, FaDownload, FaFileUpload, FaGithub } from 'react-icons/fa';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
@@ -55,6 +54,15 @@ function App() {
     
     const events = [];
     let aulaTitles = {};
+    let year, month;
+
+    // Extrair ano e mês
+    const dateMatch = text.match(/(\w+)\s+(\d{4})/);
+    if (dateMatch) {
+      const monthNamesPT = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+      month = monthNamesPT.indexOf(dateMatch[1].toLowerCase()) + 1;
+      year = parseInt(dateMatch[2]);
+    }
 
     // Processa as designações das aulas
     lines.forEach((line) => {
@@ -84,15 +92,12 @@ function App() {
           events.push({
             title: formattedTitle,
             start: [
-              new Date().getFullYear(),
-              new Date().getMonth() + 1,
+              year,
+              month,
               parseInt(currentDay, 10),
               ...time.split(':').map(Number)
             ],
             duration: { hours: 1, minutes: 0 },
-            description: `Aula ${code}`,
-            location: 'Sala de aula',
-            status: 'CONFIRMED',
           });
         }
       }
@@ -105,25 +110,34 @@ function App() {
     if (events.length === 0) return;
 
     try {
-      const icsEvents = events.map(event => ({
-        start: event.start,
-        duration: event.duration,
-        title: event.title,
-      }));
+      let icsContent = [
+        'BEGIN:VCALENDAR',
+        'VERSION:2.0',
+        'PRODID:-//ClassScheduleCalendar//EN',
+        'CALSCALE:GREGORIAN',
+        'METHOD:PUBLISH'
+      ].join('\r\n');
 
-      createEvent({
-        productId: 'ClassScheduleCalendar',
-        events: icsEvents,
-      }, (error, value) => {
-        if (error) {
-          console.error('Erro ao criar o arquivo ICS:', error);
-          alert('Erro ao criar o arquivo ICS. Tente novamente.');
-        } else {
-          const blob = new Blob([value], { type: 'text/calendar' });
-          const url = URL.createObjectURL(blob);
-          setIcsFile(url);
-        }
+      events.forEach(event => {
+        const startDate = new Date(Date.UTC(event.start[0], event.start[1] - 1, event.start[2], event.start[3], event.start[4]));
+        const endDate = new Date(startDate.getTime() + event.duration.hours * 60 * 60 * 1000);
+
+        const formatDate = (date) => date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+
+        icsContent += [
+          '\r\nBEGIN:VEVENT',
+          `DTSTART:${formatDate(startDate)}`,
+          `DTEND:${formatDate(endDate)}`,
+          `SUMMARY:${event.title}`,
+          'END:VEVENT'
+        ].join('\r\n');
       });
+
+      icsContent += '\r\nEND:VCALENDAR';
+
+      const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      setIcsFile(url);
     } catch (error) {
       console.error('Erro ao criar o arquivo ICS:', error);
       alert('Erro ao criar o arquivo ICS. Tente novamente.');
