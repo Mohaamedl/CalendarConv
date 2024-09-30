@@ -1,6 +1,6 @@
 import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf';
 import React, { useCallback, useState } from 'react';
-import { FaCalendarAlt, FaDownload, FaFileUpload, FaGithub } from 'react-icons/fa';
+import { FaCalendarAlt, FaDownload, FaFileUpload, FaGithub, FaCopy } from 'react-icons/fa';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
 
@@ -9,6 +9,7 @@ function App() {
   const [icsFile, setIcsFile] = useState(null);
   const [events, setEvents] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [showDownloadMessage, setShowDownloadMessage] = useState(false);
 
   const handleFileChange = useCallback((e) => {
     const file = e.target.files[0];
@@ -143,6 +144,19 @@ function App() {
     }
   };
 
+  const handleDownload = () => {
+    setShowDownloadMessage(true);
+    setTimeout(() => setShowDownloadMessage(false), 10000);
+  };
+
+  const copyEventsToClipboard = () => {
+    const eventsText = events.map(event => 
+      `${event.title}\nDate: ${event.start.slice(0, 3).join('-')}\nTime: ${event.start.slice(3).join(':')}\n`
+    ).join('\n');
+    navigator.clipboard.writeText(eventsText);
+    alert('Events copied to clipboard!');
+  };
+
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-green-100 via-yellow-50 to-brown-100 flex flex-col">
       <div className="flex-grow flex flex-col justify-center items-center px-4 py-12">
@@ -150,7 +164,7 @@ function App() {
           <div className="relative">
             <div className="absolute inset-0 bg-gradient-to-r from-green-400 to-yellow-500 shadow-lg transform -skew-y-6 sm:skew-y-0 sm:-rotate-6 sm:rounded-3xl"></div>
             <div className="relative bg-white shadow-lg sm:rounded-3xl px-4 py-10 sm:p-20">
-              <h1 className="text-4xl font-bold mb-8 text-center text-brown-800">Schedule Calendar</h1>
+              <h1 className="text-4xl font-bold mb-8 text-center text-brown-800">Event Schedule Converter</h1>
               
               <div className="mb-6">
                 <label className="flex items-center justify-center w-full px-4 py-2 bg-green-600 text-white rounded-lg shadow-lg tracking-wide uppercase border border-green cursor-pointer hover:bg-green-700 transition duration-300 ease-in-out">
@@ -196,15 +210,31 @@ function App() {
       </div>
       
       {icsFile && (
-        <div className="fixed bottom-4 right-4 z-10">
+        <div className="fixed bottom-4 right-4 z-10 flex flex-col items-end">
           <a
             href={icsFile}
             download="calendar.ics"
-            className="px-4 py-2 bg-brown-500 text-white rounded-lg transition duration-300 ease-in-out hover:bg-brown-600 shadow-lg flex items-center"
+            className="px-4 py-2 bg-brown-500 text-white rounded-lg transition duration-300 ease-in-out hover:bg-brown-600 shadow-lg flex items-center mb-2"
+            onClick={handleDownload}
           >
             <FaDownload className="mr-2" />
             Download .ics
           </a>
+          <button
+            onClick={copyEventsToClipboard}
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg transition duration-300 ease-in-out hover:bg-blue-600 shadow-lg flex items-center"
+          >
+            <FaCopy className="mr-2" />
+            Copy Events
+          </button>
+        </div>
+      )}
+      
+      {showDownloadMessage && (
+        <div className="fixed bottom-20 right-4 z-10 bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded shadow-md max-w-md">
+          <p className="font-bold">Download Complete!</p>
+          <p>For mobile users: Open the .ics file with your calendar app and add all events.</p>
+          <p>For PC users: If you can't open the .ics file directly, try importing it into your calendar application or use the "Copy Events" button to manually add the events.</p>
         </div>
       )}
       
