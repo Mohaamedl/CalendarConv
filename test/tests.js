@@ -4,6 +4,6 @@ import App from './App';
 
 test('renders learn react link', () => {
   render(<App />);
-  const linkElement = screen.getByText(/Calendário de Aulas Retro/i);
+  const linkElement = screen.getByText(/TODO/i);
   expect(linkElement).toBeInTheDocument();
 });

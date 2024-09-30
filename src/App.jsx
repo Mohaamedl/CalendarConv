@@ -121,11 +121,11 @@ function App() {
       events.forEach(event => {
         const [year, month, day, hour, minute] = event.start;
         
-        // Criar a data no fuso horário local
+        
         const startDate = new Date(year, month - 1, day, hour, minute);
         const endDate = new Date(startDate.getTime() + event.duration.hours * 60 * 60 * 1000);
 
-        // Função para formatar a data no formato ICS
+        
         const formatDate = (date) => {
           return date.getFullYear() +
             ('0' + (date.getMonth() + 1)).slice(-2) +
