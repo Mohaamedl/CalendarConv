@@ -90,6 +90,9 @@ function App() {
               ...time.split(':').map(Number)
             ],
             duration: { hours: 1, minutes: 0 },
+            description: `Aula ${code}`,
+            location: 'Sala de aula',
+            status: 'CONFIRMED',
           });
         }
       }
@@ -98,27 +101,29 @@ function App() {
     return events;
   };
 
-  const generateIcsFile = async (events) => {
+  const generateIcsFile = (events) => {
     if (events.length === 0) return;
 
     try {
-      const promises = events.map(event => {
-        return new Promise((resolve, reject) => {
-          createEvent(event, (error, value) => {
-            if (error) {
-              reject(error);
-            } else {
-              resolve(value);
-            }
-          });
-        });
-      });
+      const icsEvents = events.map(event => ({
+        start: event.start,
+        duration: event.duration,
+        title: event.title,
+      }));
 
-      const icsContent = await Promise.all(promises);
-      const finalIcs = icsContent.join('\n');
-      const blob = new Blob([finalIcs], { type: 'text/calendar' });
-      const url = URL.createObjectURL(blob);
-      setIcsFile(url);
+      createEvent({
+        productId: 'ClassScheduleCalendar',
+        events: icsEvents,
+      }, (error, value) => {
+        if (error) {
+          console.error('Erro ao criar o arquivo ICS:', error);
+          alert('Erro ao criar o arquivo ICS. Tente novamente.');
+        } else {
+          const blob = new Blob([value], { type: 'text/calendar' });
+          const url = URL.createObjectURL(blob);
+          setIcsFile(url);
+        }
+      });
     } catch (error) {
       console.error('Erro ao criar o arquivo ICS:', error);
       alert('Erro ao criar o arquivo ICS. Tente novamente.');
@@ -195,7 +200,7 @@ function App() {
         <p className="mt-2">
           Developed by Mohamed | 
           <a 
-            href="https://github.com/yourusername/your-repo-name" 
+            href="https://github.com/Mohaamedl/CalendarConv" 
             target="_blank" 
             rel="noopener noreferrer"
             className="text-brown-800 hover:text-brown-600 ml-1 inline-flex items-center"
