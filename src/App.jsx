@@ -1,10 +1,9 @@
+
 import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf';
 import React, { useCallback, useState } from 'react';
 import { FaCalendarAlt, FaCalendarTimes, FaCopy, FaDownload, FaFileUpload, FaGithub } from 'react-icons/fa';
-import { v4 as uuidv4 } from 'uuid';
-
 pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
-
+import CryptoJS from 'crypto-js';
 function App() {
   const [pdfFile, setPdfFile] = useState(null);
   const [icsFile, setIcsFile] = useState(null);
@@ -51,6 +50,9 @@ function App() {
     };
     reader.readAsArrayBuffer(pdfFile);
   };
+  function createSecureId(input) {
+    return CryptoJS.SHA256(input.toString()).toString(CryptoJS.enc.Hex);
+  }
 
   const parsePdfText = (text) => {
     const lines = text.split('\n')[0].split(/\s+(?=\d{1,2}\s+| Abrv)/);
@@ -90,9 +92,9 @@ function App() {
           const formattedTitle = `${title} (${code})`;
 
           const [hour, minute] = time.split(':').map(Number);
-          const PRIME = 124429;
+          const PRIME = 773765232421533317138566700190990858957957133;
           const eventId_num = PRIME*year + PRIME*month + PRIME*parseInt(currentDay, 10) + PRIME*hour + PRIME*minute + PRIME*code;
-
+          const secureEventId = createSecureId(eventId_num);
           if (currentEvent && currentEvent.title === formattedTitle && 
               currentEvent.start[2] === parseInt(currentDay, 10) &&
               currentEvent.start[3] + currentEvent.duration.hours === hour) {
@@ -107,7 +109,7 @@ function App() {
               title: formattedTitle,
               start: [year, month, parseInt(currentDay, 10), hour, minute],
               duration: { hours: 1, minutes: 0 },
-              uid: `${year}${month}${currentDay}${hour}${minute}-${eventId_num}`
+              uid: `${year}${month}${currentDay}${hour}${minute}-${secureEventId}`
             };
           }
         }
@@ -134,15 +136,15 @@ function App() {
         'METHOD:PUBLISH'
       ].join('\r\n');
 
-      const dstChangeDate = new Date(2023, 9, 27); // 27 de outubro de 2023
+      const dstChangeDate = new Date(2023, 9, 27); // time change 
 
       events.forEach(event => {
         const [year, month, day, hour, minute] = event.start;
         
-        // Criar a data no fuso horário local
+        
         const eventDate = new Date(year, month - 1, day, hour, minute);
         
-        // Ajustar para o horário de verão se necessário
+        // adjust for summer time
         if (eventDate < dstChangeDate) {
           eventDate.setHours(eventDate.getHours() - 1);
         }
