@@ -57,7 +57,6 @@ function App() {
     let aulaTitles = {};
     let year, month;
 
-    
     const dateMatch = text.match(/(\w+)\s+(\d{4})/);
     if (dateMatch) {
       const monthNamesPT = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
@@ -65,9 +64,7 @@ function App() {
       year = parseInt(dateMatch[2]);
     }
 
-
     lines.forEach((line) => {
-      console.log(line)
       const titleMatch = line.match(/(\d{4})\s+(.+?)\s+\(\d{4}\)/);
       if (titleMatch) {
         const code = titleMatch[1];
@@ -75,7 +72,6 @@ function App() {
         aulaTitles[code] = title;
       }
     });
-    console.log(aulaTitles)
 
     lines.forEach((line) => {
       const eventMatch = line.match(/^(\d{1,2})\s+((\d{2}:\d{2}\s+\d{4}\s*)+)/);
@@ -83,22 +79,37 @@ function App() {
         const currentDay = eventMatch[1].padStart(2, '0');
         const timeCodes = eventMatch[2].trim().split(/\s+/);
 
+        let currentEvent = null;
+
         for (let i = 0; i < timeCodes.length; i += 2) {
           const time = timeCodes[i];
           const code = timeCodes[i + 1];
           const title = aulaTitles[code] || `Aula ${code}`;
           const formattedTitle = `${title} (${code})`;
 
-          events.push({
-            title: formattedTitle,
-            start: [
-              year,
-              month,
-              parseInt(currentDay, 10),
-              ...time.split(':').map(Number)
-            ],
-            duration: { hours: 1, minutes: 0 },
-          });
+          const [hour, minute] = time.split(':').map(Number);
+
+          if (currentEvent && currentEvent.title === formattedTitle && 
+              currentEvent.start[2] === parseInt(currentDay, 10) &&
+              currentEvent.start[3] + currentEvent.duration.hours === hour) {
+            // Extend the duration of the current event
+            currentEvent.duration.hours += 1;
+          } else {
+            // Start a new event
+            if (currentEvent) {
+              events.push(currentEvent);
+            }
+            currentEvent = {
+              title: formattedTitle,
+              start: [year, month, parseInt(currentDay, 10), hour, minute],
+              duration: { hours: 1, minutes: 0 },
+            };
+          }
+        }
+
+        // Add the last event
+        if (currentEvent) {
+          events.push(currentEvent);
         }
       }
     });
@@ -120,7 +131,6 @@ function App() {
 
       events.forEach(event => {
         const [year, month, day, hour, minute] = event.start;
-        
         
         const startDate = new Date(year, month - 1, day, hour, minute);
         const endDate = new Date(startDate.getTime() + event.duration.hours * 60 * 60 * 1000);
