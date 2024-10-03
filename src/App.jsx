@@ -103,7 +103,7 @@ function App() {
             }
             currentEvent = {
               title: formattedTitle,
-              start: new Date(Date.UTC(year, month - 1, parseInt(currentDay, 10), hour, minute)).getTime(),
+              start: [year, month, parseInt(currentDay, 10), hour, minute],
               duration: { hours: 1, minutes: 0 },
               uid: `${year}${month}${currentDay}${hour}${minute}-${uuidv4()}`
             };
@@ -132,24 +132,35 @@ function App() {
         'METHOD:PUBLISH'
       ].join('\r\n');
 
-      const formatDate = (timestamp) => {
-        const date = new Date(timestamp);
-        return date.getUTCFullYear() +
-          ('0' + (date.getUTCMonth() + 1)).slice(-2) +
-          ('0' + date.getUTCDate()).slice(-2) + 'T' +
-          ('0' + date.getUTCHours()).slice(-2) +
-          ('0' + date.getUTCMinutes()).slice(-2) +
-          ('0' + date.getUTCSeconds()).slice(-2) + 'Z';
-      };
+      const dstChangeDate = new Date(2023, 9, 27); // 27 de outubro de 2023
 
       events.forEach(event => {
-        const startDate = event.start;
-        const endDate = startDate + event.duration.hours * 60 * 60 * 1000;
+        const [year, month, day, hour, minute] = event.start;
+        
+        // Criar a data no fuso horário local
+        const eventDate = new Date(year, month - 1, day, hour, minute);
+        
+        // Ajustar para o horário de verão se necessário
+        if (eventDate < dstChangeDate) {
+          eventDate.setHours(eventDate.getHours() - 1);
+        }
+
+        const startDate = eventDate;
+        const endDate = new Date(startDate.getTime() + event.duration.hours * 60 * 60 * 1000);
+
+        const formatDate = (date) => {
+          return date.getFullYear() +
+            ('0' + (date.getMonth() + 1)).slice(-2) +
+            ('0' + date.getDate()).slice(-2) + 'T' +
+            ('0' + date.getHours()).slice(-2) +
+            ('0' + date.getMinutes()).slice(-2) +
+            ('0' + date.getSeconds()).slice(-2);
+        };
 
         icsContent += [
           '\r\nBEGIN:VEVENT',
           `UID:${event.uid}`,
-          `DTSTAMP:${formatDate(Date.now())}`,
+          `DTSTAMP:${formatDate(new Date())}`,
           `DTSTART:${formatDate(startDate)}`,
           `DTEND:${formatDate(endDate)}`,
           `SUMMARY:${event.title}`,
