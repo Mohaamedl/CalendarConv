@@ -1,6 +1,6 @@
 import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf';
 import React, { useCallback, useState } from 'react';
-import { FaCalendarAlt, FaDownload, FaFileUpload, FaGithub, FaCopy, FaCalendarTimes } from 'react-icons/fa';
+import { FaCalendarAlt, FaCalendarTimes, FaCopy, FaDownload, FaFileUpload, FaGithub } from 'react-icons/fa';
 import { v4 as uuidv4 } from 'uuid';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
@@ -58,7 +58,6 @@ function App() {
     const events = [];
     let aulaTitles = {};
     let year, month;
-    const eventIds = new Map();
 
     const dateMatch = text.match(/(\w+)\s+(\d{4})/);
     if (dateMatch) {
@@ -91,14 +90,8 @@ function App() {
           const formattedTitle = `${title} (${code})`;
 
           const [hour, minute] = time.split(':').map(Number);
-
-          const eventKey = `${year}-${month}-${currentDay}-${hour}-${minute}-${formattedTitle}`;
-          let eventId = eventIds.get(eventKey);
-
-          if (!eventId) {
-            eventId = uuidv4();
-            eventIds.set(eventKey, eventId);
-          }
+          const PRIME = 124429;
+          const eventId_num = PRIME*year + PRIME*month + PRIME*parseInt(currentDay, 10) + PRIME*hour + PRIME*minute + PRIME*code;
 
           if (currentEvent && currentEvent.title === formattedTitle && 
               currentEvent.start[2] === parseInt(currentDay, 10) &&
@@ -112,9 +105,9 @@ function App() {
             }
             currentEvent = {
               title: formattedTitle,
-              start: new Date(Date.UTC(year, month - 1, parseInt(currentDay, 10), hour, minute)).getTime(),
+              start: [year, month, parseInt(currentDay, 10), hour, minute],
               duration: { hours: 1, minutes: 0 },
-              uid: eventId
+              uid: `${year}${month}${currentDay}${hour}${minute}-${eventId_num}`
             };
           }
         }
