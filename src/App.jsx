@@ -103,7 +103,7 @@ function App() {
             }
             currentEvent = {
               title: formattedTitle,
-              start: [year, month, parseInt(currentDay, 10), hour, minute],
+              start: new Date(Date.UTC(year, month - 1, parseInt(currentDay, 10), hour, minute)).getTime(),
               duration: { hours: 1, minutes: 0 },
               uid: `${year}${month}${currentDay}${hour}${minute}-${uuidv4()}`
             };
@@ -132,26 +132,24 @@ function App() {
         'METHOD:PUBLISH'
       ].join('\r\n');
 
-      events.forEach(event => {
-        const [year, month, day, hour, minute] = event.start;
-        
-        const startDate = new Date(Date.UTC(year, month - 1, day, hour, minute));
-        const endDate = new Date(startDate.getTime() + event.duration.hours * 60 * 60 * 1000);
+      const formatDate = (timestamp) => {
+        const date = new Date(timestamp);
+        return date.getUTCFullYear() +
+          ('0' + (date.getUTCMonth() + 1)).slice(-2) +
+          ('0' + date.getUTCDate()).slice(-2) + 'T' +
+          ('0' + date.getUTCHours()).slice(-2) +
+          ('0' + date.getUTCMinutes()).slice(-2) +
+          ('0' + date.getUTCSeconds()).slice(-2) + 'Z';
+      };
 
-        
-        const formatDate = (date) => {
-          return date.getUTCFullYear() +
-            ('0' + (date.getUTCMonth() + 1)).slice(-2) +
-            ('0' + date.getUTCDate()).slice(-2) + 'T' +
-            ('0' + date.getUTCHours()).slice(-2) +
-            ('0' + date.getUTCMinutes()).slice(-2) +
-            ('0' + date.getUTCSeconds()).slice(-2) + 'Z';
-        };
+      events.forEach(event => {
+        const startDate = event.start;
+        const endDate = startDate + event.duration.hours * 60 * 60 * 1000;
 
         icsContent += [
           '\r\nBEGIN:VEVENT',
           `UID:${event.uid}`,
-          `DTSTAMP:${formatDate(new Date())}`,
+          `DTSTAMP:${formatDate(Date.now())}`,
           `DTSTART:${formatDate(startDate)}`,
           `DTEND:${formatDate(endDate)}`,
           `SUMMARY:${event.title}`,
