@@ -105,7 +105,7 @@ function App() {
               title: formattedTitle,
               start: [year, month, parseInt(currentDay, 10), hour, minute],
               duration: { hours: 1, minutes: 0 },
-              uid: uuidv4() // add a UID
+              uid: `${year}${month}${currentDay}${hour}${minute}-${uuidv4()}`
             };
           }
         }
@@ -135,26 +135,30 @@ function App() {
       events.forEach(event => {
         const [year, month, day, hour, minute] = event.start;
         
-        const startDate = new Date(year, month - 1, day, hour, minute);
+        const startDate = new Date(Date.UTC(year, month - 1, day, hour, minute));
         const endDate = new Date(startDate.getTime() + event.duration.hours * 60 * 60 * 1000);
 
         
         const formatDate = (date) => {
-          return date.getFullYear() +
-            ('0' + (date.getMonth() + 1)).slice(-2) +
-            ('0' + date.getDate()).slice(-2) + 'T' +
-            ('0' + date.getHours()).slice(-2) +
-            ('0' + date.getMinutes()).slice(-2) +
-            ('0' + date.getSeconds()).slice(-2);
+          return date.getUTCFullYear() +
+            ('0' + (date.getUTCMonth() + 1)).slice(-2) +
+            ('0' + date.getUTCDate()).slice(-2) + 'T' +
+            ('0' + date.getUTCHours()).slice(-2) +
+            ('0' + date.getUTCMinutes()).slice(-2) +
+            ('0' + date.getUTCSeconds()).slice(-2) + 'Z';
         };
 
         icsContent += [
           '\r\nBEGIN:VEVENT',
           `UID:${event.uid}`,
+          `DTSTAMP:${formatDate(new Date())}`,
           `DTSTART:${formatDate(startDate)}`,
           `DTEND:${formatDate(endDate)}`,
           `SUMMARY:${event.title}`,
           `STATUS:${status}`,
+          'SEQUENCE:0',
+          'CLASS:PUBLIC',
+          'TRANSP:OPAQUE',
           'END:VEVENT'
         ].join('\r\n');
       });
