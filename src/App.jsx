@@ -1,6 +1,7 @@
 import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf';
 import React, { useCallback, useState } from 'react';
-import { FaCalendarAlt, FaDownload, FaFileUpload, FaGithub, FaCopy } from 'react-icons/fa';
+import { FaCalendarAlt, FaDownload, FaFileUpload, FaGithub, FaCopy, FaCalendarTimes } from 'react-icons/fa';
+import { v4 as uuidv4 } from 'uuid';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
 
@@ -39,7 +40,8 @@ function App() {
         const extractedEvents = parsePdfText(text);
         console.log("Parsed Events:", extractedEvents); 
         setEvents(extractedEvents);
-        generateIcsFile(extractedEvents);
+        const icsUrl = generateIcsFile(extractedEvents);
+        setIcsFile(icsUrl);
       } catch (error) {
         console.error('Error extracting PDF data:', error);
         alert('Error extracting PDF data. Please try again.');
@@ -103,6 +105,7 @@ function App() {
               title: formattedTitle,
               start: [year, month, parseInt(currentDay, 10), hour, minute],
               duration: { hours: 1, minutes: 0 },
+              uid: uuidv4() // add a UID
             };
           }
         }
@@ -117,7 +120,7 @@ function App() {
     return events;
   };
 
-  const generateIcsFile = (events) => {
+  const generateIcsFile = (events, status = 'CONFIRMED') => {
     if (events.length === 0) return;
 
     try {
@@ -147,9 +150,11 @@ function App() {
 
         icsContent += [
           '\r\nBEGIN:VEVENT',
+          `UID:${event.uid}`,
           `DTSTART:${formatDate(startDate)}`,
           `DTEND:${formatDate(endDate)}`,
           `SUMMARY:${event.title}`,
+          `STATUS:${status}`,
           'END:VEVENT'
         ].join('\r\n');
       });
@@ -158,10 +163,23 @@ function App() {
 
       const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
       const url = URL.createObjectURL(blob);
-      setIcsFile(url);
+      return url;
     } catch (error) {
       console.error('Error creating ICS:', error);
       alert('Error creating ICS. Please try again.');
+      return null;
+    }
+  };
+
+  const generateCancellationIcs = () => {
+    const cancellationUrl = generateIcsFile(events, 'CANCELLED');
+    if (cancellationUrl) {
+      const link = document.createElement('a');
+      link.href = cancellationUrl;
+      link.download = 'cancel_events.ics';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
   };
 
@@ -242,6 +260,13 @@ function App() {
             <FaDownload className="mr-2" />
             Download .ics
           </a>
+          <button
+            onClick={generateCancellationIcs}
+            className="px-4 py-2 bg-red-500 text-white rounded-lg transition duration-300 ease-in-out hover:bg-red-600 shadow-lg flex items-center mb-2"
+          >
+            <FaCalendarTimes className="mr-2" />
+            Generate Cancellation .ics
+          </button>
           <button
             onClick={copyEventsToClipboard}
             className="px-4 py-2 bg-blue-500 text-white rounded-lg transition duration-300 ease-in-out hover:bg-blue-600 shadow-lg flex items-center"
