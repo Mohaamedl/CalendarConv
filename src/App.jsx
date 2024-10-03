@@ -58,6 +58,7 @@ function App() {
     const events = [];
     let aulaTitles = {};
     let year, month;
+    const eventIds = new Map();
 
     const dateMatch = text.match(/(\w+)\s+(\d{4})/);
     if (dateMatch) {
@@ -91,6 +92,14 @@ function App() {
 
           const [hour, minute] = time.split(':').map(Number);
 
+          const eventKey = `${year}-${month}-${currentDay}-${hour}-${minute}-${formattedTitle}`;
+          let eventId = eventIds.get(eventKey);
+
+          if (!eventId) {
+            eventId = uuidv4();
+            eventIds.set(eventKey, eventId);
+          }
+
           if (currentEvent && currentEvent.title === formattedTitle && 
               currentEvent.start[2] === parseInt(currentDay, 10) &&
               currentEvent.start[3] + currentEvent.duration.hours === hour) {
@@ -103,9 +112,9 @@ function App() {
             }
             currentEvent = {
               title: formattedTitle,
-              start: [year, month, parseInt(currentDay, 10), hour, minute],
+              start: new Date(Date.UTC(year, month - 1, parseInt(currentDay, 10), hour, minute)).getTime(),
               duration: { hours: 1, minutes: 0 },
-              uid: `${year}${month}${currentDay}${hour}${minute}-${uuidv4()}`
+              uid: eventId
             };
           }
         }
