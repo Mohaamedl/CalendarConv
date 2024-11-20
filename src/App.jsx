@@ -1,9 +1,9 @@
 
+import CryptoJS from 'crypto-js';
 import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf';
 import React, { useCallback, useState } from 'react';
 import { FaCalendarAlt, FaCalendarTimes, FaCopy, FaDownload, FaFileUpload, FaGithub } from 'react-icons/fa';
 pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
-import CryptoJS from 'crypto-js';
 function App() {
   const [pdfFile, setPdfFile] = useState(null);
   const [icsFile, setIcsFile] = useState(null);
@@ -73,7 +73,9 @@ function App() {
       if (titleMatch) {
         const code = titleMatch[1];
         const title = titleMatch[2].trim();
-        aulaTitles[code] = title;
+        const prof_info = titleMatch.input.match(/['(']\d{4}[')']\s{2,5}[A-ZÀ-Ý][a-zà-ý]+ [A-ZÀ-Ý][a-zà-ý]+ ['(for']{4}\d{4}[')]/mg)[0].split(/\s/); // extract prof. information: name and its number
+   
+        aulaTitles[code] = [title, prof_info.slice(3,5).join(' '),prof_info[5].split(/['()']+/).join('')];
       }
     });
 
@@ -88,8 +90,12 @@ function App() {
         for (let i = 0; i < timeCodes.length; i += 2) {
           const time = timeCodes[i];
           const code = timeCodes[i + 1];
-          const title = aulaTitles[code] || `Aula ${code}`;
+          const title = aulaTitles[code][0] || `Aula ${code}`;
+          const for_name = aulaTitles[code][1] || `Aula ${code}`;
           const formattedTitle = `${title} (${code})`;
+          const formador =  `Formador/a ${for_name}`;
+          const summary = formador + "  Número de formador/a: " + `${aulaTitles[code][2]}`
+
 
           const [hour, minute] = time.split(':').map(Number);
           const PRIME = 773765232421533317138566700190990858957957133;
@@ -109,6 +115,7 @@ function App() {
               title: formattedTitle,
               start: [year, month, parseInt(currentDay, 10), hour, minute],
               duration: { hours: 1, minutes: 0 },
+              summary: summary,
               uid: `${year}${month}${currentDay}${hour}${minute}-${secureEventId}`
             };
           }
@@ -167,7 +174,7 @@ function App() {
           `DTSTAMP:${formatDate(new Date())}`,
           `DTSTART:${formatDate(startDate)}`,
           `DTEND:${formatDate(endDate)}`,
-          `SUMMARY:${event.title}`,
+          `SUMMARY:${event.title} ${event.summary}`,
           `STATUS:${status}`,
           'SEQUENCE:0',
           'CLASS:PUBLIC',
