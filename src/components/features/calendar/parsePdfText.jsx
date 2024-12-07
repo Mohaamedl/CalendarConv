@@ -1,4 +1,5 @@
-import createSecureId from "./securedID";
+import createSecureId from './securedID';
+
 const parsePdfText = (text) => {
     const lines = text.split('\n')[0].split(/\s+(?=\d{1,2}\s+| Abrv)/);
     

@@ -1,5 +1,3 @@
-
-
 const generateIcsFile = (events, status = 'CONFIRMED') => {
     /*
 
